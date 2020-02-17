@@ -4,6 +4,8 @@
 #include <ExplorationPlanner.h>
 #include <navfn/navfn_ros.h>
 #include "ros/ros.h"
+#include <tf/transform_listener.h>
+#include <tf/transform_datatypes.h>
 #include "hungarian.h"
 #include <ros/console.h>
 #include <costmap_2d/costmap_2d_ros.h>

@@ -14,6 +14,7 @@
 #include <costmap_2d/observation.h>
 #include <costmap_2d/observation_buffer.h>
 #include <tf/transform_listener.h>
+#include <tf2_ros/transform_listener.h>
 #include <std_msgs/String.h>
 //#include <costmap_2d/voxel_costmap_2d.h>
 #include <actionlib/client/simple_action_client.h>
@@ -47,7 +48,7 @@ class Explorer {
 
 public:
 
-	Explorer(tf::TransformListener& tf) :
+	Explorer(tf2_ros::Buffer& tf) :
         counter(0), rotation_counter(0), nh("~"), exploration_finished(false), number_of_robots(1), accessing_cluster(0), cluster_element_size(0),
         cluster_flag(false), cluster_element(-1), cluster_initialize_flag(false), global_iterattions(0), global_iterations_counter(0),
         counter_waiting_for_clusters(0), global_costmap_iteration(0), robot_prefix_empty(false), robot_id(0){
@@ -202,10 +203,12 @@ public:
 		 * visualized. Therefore set the "first" goal to the point of origin
 		 * (home position).
 		 */
-
-		if (!costmap2d_local->getRobotPose(robotPose)) {
+        
+        geometry_msgs::PoseStamped geometryMsgRobotPose;
+		if (!costmap2d_local->getRobotPose(geometryMsgRobotPose)) {
 			ROS_ERROR("Failed to get RobotPose");
 		}
+        tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
 		visualize_goal_point(robotPose.getOrigin().getX(),
 				robotPose.getOrigin().getY());
 
@@ -1446,9 +1449,11 @@ public:
 		 * transmitted to the robot and feedback is given about the actual
 		 * driving state of the robot.
 		 */
-                if (!costmap2d_local->getRobotPose(robotPose)) {
+        geometry_msgs::PoseStamped geometryMsgRobotPose;
+        if (!costmap2d_local->getRobotPose(geometryMsgRobotPose)) {
 			ROS_ERROR("Failed to get RobotPose");
 		}
+		tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
 
 		actionlib::SimpleActionClient < move_base_msgs::MoveBaseAction
 				> ac("move_base", true);
@@ -1538,11 +1543,13 @@ public:
 
 	bool turn_robot(int seq) {
 
-                double angle = 45;
+        double angle = 45;
 
-                if (!costmap2d_local->getRobotPose(robotPose)) {
+        geometry_msgs::PoseStamped geometryMsgRobotPose;
+        if (!costmap2d_local->getRobotPose(geometryMsgRobotPose)) {
 			ROS_ERROR("Failed to get RobotPose");
 		}
+		tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
 
 		actionlib::SimpleActionClient < move_base_msgs::MoveBaseAction
 				> ac("move_base", true);
@@ -1695,8 +1702,11 @@ int main(int argc, char **argv) {
 	/*
 	 * Create instance of Simple Navigation
 	 */
-	tf::TransformListener tf(ros::Duration(10));
-	Explorer simple(tf);
+//	tf::TransformListener tf(ros::Duration(10));
+	tf2_ros::Buffer tfBuffer;
+    tf2_ros::TransformListener tfListener(tfBuffer);
+	Explorer simple(tfBuffer);
+
 
 	/*
 	 * The ros::spin command is needed to wait for any call-back. This could for

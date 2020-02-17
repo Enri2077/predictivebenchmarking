@@ -871,14 +871,16 @@ bool ExplorationPlanner::transformToOwnCoordinates_visited_frontiers()
 
 bool ExplorationPlanner::check_trajectory_plan()
 {
-    geometry_msgs::PoseStamped goalPointSimulated, startPointSimulated;
+    geometry_msgs::PoseStamped goalPointSimulated, startPointSimulated, geometryMsgRobotPose;
     int distance;
 
     ROS_INFO("Check Trajectory Length");
-    if (!costmap_global_ros_->getRobotPose(robotPose))
+    if (!costmap_global_ros_->getRobotPose(geometryMsgRobotPose))
     {
             ROS_ERROR("Failed to get RobotPose");
     }
+
+    tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
 
     startPointSimulated.header.seq = start_point_simulated_message++;	// increase the sequence number
     startPointSimulated.header.stamp = ros::Time::now();
@@ -938,14 +940,16 @@ bool ExplorationPlanner::check_trajectory_plan()
 
 int ExplorationPlanner::calculate_travel_path(double x, double y)
 {
-        geometry_msgs::PoseStamped goalPointSimulated, startPointSimulated;
+    geometry_msgs::PoseStamped goalPointSimulated, startPointSimulated, geometryMsgRobotPose;
     double distance;
 
     ROS_DEBUG("Check Trajectory");
-    if (!costmap_global_ros_->getRobotPose(robotPose))
+    if (!costmap_global_ros_->getRobotPose(geometryMsgRobotPose))
     {
             ROS_ERROR("Failed to get RobotPose");
     }
+
+    tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
 
     std::vector<double> backoffGoal;
     bool backoff_flag = smartGoalBackoff(x,y, costmap_global_ros_, &backoffGoal);
@@ -1001,14 +1005,16 @@ int ExplorationPlanner::calculate_travel_path(double x, double y)
 
 int ExplorationPlanner::check_trajectory_plan(double x, double y)
 {
-    geometry_msgs::PoseStamped goalPointSimulated, startPointSimulated;
+    geometry_msgs::PoseStamped goalPointSimulated, startPointSimulated, geometryMsgRobotPose;
     int distance;
 
     ROS_DEBUG("Check Trajectory");
-    if (!costmap_global_ros_->getRobotPose(robotPose))
+    if (!costmap_global_ros_->getRobotPose(geometryMsgRobotPose))
     {
             ROS_ERROR("Failed to get RobotPose");
     }
+
+    tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
 
     std::vector<double> backoffGoal;
     bool backoff_flag = smartGoalBackoff(x,y, costmap_global_ros_, &backoffGoal);
@@ -1066,14 +1072,16 @@ int ExplorationPlanner::check_trajectory_plan(double x, double y)
 
 int ExplorationPlanner::estimate_trajectory_plan(double start_x, double start_y, double target_x, double target_y)
 {
-    geometry_msgs::PoseStamped goalPointSimulated, startPointSimulated;
+    geometry_msgs::PoseStamped goalPointSimulated, startPointSimulated, geometryMsgRobotPose;
     int distance;
 
     ROS_DEBUG("Check Trajectory");
-    if (!costmap_ros_->getRobotPose(robotPose))
+    if (!costmap_ros_->getRobotPose(geometryMsgRobotPose))
     {
             ROS_ERROR("Failed to get RobotPose");
     }
+
+    tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
 
     std::vector<double> backoffGoal;
     bool backoff_flag = smartGoalBackoff(target_x,target_y, costmap_global_ros_, &backoffGoal);
@@ -1830,10 +1838,13 @@ int ExplorationPlanner::calculateAuctionBID(int cluster_number, std::string stra
         return(-1);
     }
 
-    if (!costmap_global_ros_->getRobotPose(robotPose))
+    geometry_msgs::PoseStamped geometryMsgRobotPose;
+    if (!costmap_global_ros_->getRobotPose(geometryMsgRobotPose))
     {
             ROS_ERROR("Failed to get RobotPose");
     }
+
+    tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
 
     int distance = -1;
     for(int i = 0; i < clusters.at(cluster_vector_position).cluster_element.size(); i++)
@@ -4160,10 +4171,14 @@ bool ExplorationPlanner::negotiate_Frontier(double x, double y, int detected_by,
 
 bool ExplorationPlanner::determine_goal(int strategy, std::vector<double> *final_goal, int count, int actual_cluster_id, std::vector<std::string> *robot_str_name)
 {
-    if (!costmap_ros_->getRobotPose(robotPose))
+
+    geometry_msgs::PoseStamped geometryMsgRobotPose;
+    if (!costmap_ros_->getRobotPose(geometryMsgRobotPose))
     {
             ROS_ERROR("Failed to get RobotPose");
     }
+
+    tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
 
     if(strategy == 1)
     {
@@ -4485,7 +4500,7 @@ bool ExplorationPlanner::determine_goal(int strategy, std::vector<double> *final
 
 bool sortCluster(const ExplorationPlanner::cluster_t &lhs, const ExplorationPlanner::cluster_t &rhs)
 {            
-    ROS_INFO("Now sorting %d", lhs.cluster_element.size());
+    ROS_INFO("Now sorting %zu", lhs.cluster_element.size());
     if(lhs.cluster_element.size() >= 1 && rhs.cluster_element.size() >= 1)
     {
         return lhs.cluster_element.front().dist_to_robot < rhs.cluster_element.front().dist_to_robot;
@@ -4504,10 +4519,13 @@ void ExplorationPlanner::sort(int strategy)
         if(strategy == 1)
         {
             tf::Stamped < tf::Pose > robotPose;
-            if (!costmap_ros_->getRobotPose(robotPose))
+            geometry_msgs::PoseStamped geometryMsgRobotPose;
+            if (!costmap_ros_->getRobotPose(geometryMsgRobotPose))
             {
                     ROS_ERROR("Failed to get RobotPose");
             }
+
+            tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
 
             if (frontiers.size() > 0)
             {
@@ -4535,10 +4553,14 @@ void ExplorationPlanner::sort(int strategy)
         else if(strategy == 2)
         {
             tf::Stamped < tf::Pose > robotPose;
-            if (!costmap_ros_->getRobotPose(robotPose))
+            geometry_msgs::PoseStamped geometryMsgRobotPose;
+            if (!costmap_ros_->getRobotPose(geometryMsgRobotPose))
             {
                     ROS_ERROR("Failed to get RobotPose");
             }
+
+            tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
+            
 
             if (frontiers.size() > 0)
             {
@@ -4567,10 +4589,13 @@ void ExplorationPlanner::sort(int strategy)
         else if(strategy == 3)
         {
             tf::Stamped < tf::Pose > robotPose;
-            if (!costmap_ros_->getRobotPose(robotPose))
+            geometry_msgs::PoseStamped geometryMsgRobotPose;
+            if (!costmap_ros_->getRobotPose(geometryMsgRobotPose))
             {
                     ROS_ERROR("Failed to get RobotPose");
             }
+
+            tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
 
             if (frontiers.size() > 0)
             {
@@ -4615,10 +4640,14 @@ void ExplorationPlanner::sort(int strategy)
         {
             ROS_INFO("sort(4)");
             tf::Stamped < tf::Pose > robotPose;
-            if (!costmap_ros_->getRobotPose(robotPose))
+            geometry_msgs::PoseStamped geometryMsgRobotPose;
+            if (!costmap_ros_->getRobotPose(geometryMsgRobotPose))
             {
                     ROS_ERROR("Failed to get RobotPose");
             }
+
+            tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
+
             double pose_x = robotPose.getOrigin().getX();
             double pose_y = robotPose.getOrigin().getY();
             if(clusters.size() > 0)
@@ -4667,10 +4696,14 @@ void ExplorationPlanner::sort(int strategy)
         {
             ROS_INFO("sort(5)");
             tf::Stamped < tf::Pose > robotPose;
-            if (!costmap_ros_->getRobotPose(robotPose))
+            geometry_msgs::PoseStamped geometryMsgRobotPose;
+            if (!costmap_ros_->getRobotPose(geometryMsgRobotPose))
             {
                     ROS_ERROR("Failed to get RobotPose");
             }
+            
+            tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
+
             double pose_x = robotPose.getOrigin().getX();
             double pose_y = robotPose.getOrigin().getY();
 
@@ -4762,10 +4795,14 @@ void ExplorationPlanner::sort(int strategy)
         {
             ROS_INFO("sort(6)");
             tf::Stamped < tf::Pose > robotPose;
-            if (!costmap_ros_->getRobotPose(robotPose))
+            geometry_msgs::PoseStamped geometryMsgRobotPose;
+            if (!costmap_ros_->getRobotPose(geometryMsgRobotPose))
             {
                     ROS_ERROR("Failed to get RobotPose");
             }
+
+            tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
+
             double pose_x = robotPose.getOrigin().getX();
             double pose_y = robotPose.getOrigin().getY();
 
@@ -4807,10 +4844,14 @@ void ExplorationPlanner::simulate() {
 
 
 	tf::Stamped < tf::Pose > robotPose;
-	if (!costmap_ros_->getRobotPose(robotPose))
+    geometry_msgs::PoseStamped geometryMsgRobotPose;
+	if (!costmap_ros_->getRobotPose(geometryMsgRobotPose))
 	{
 		ROS_ERROR("Failed to get RobotPose");
 	}
+
+	tf::poseStampedMsgToTF(geometryMsgRobotPose, robotPose);
+
 	// Visualize in RVIZ
 
 	for (int i = frontiers.size() - 1; i >= 0; i--) {
@@ -5573,7 +5614,8 @@ int ExplorationPlanner::backoff (int point)
 bool ExplorationPlanner::isFrontierReached(int point) {
 
 	tf::Stamped < tf::Pose > robotPose;
-	if (!costmap_ros_->getRobotPose(robotPose)) {
+    geometry_msgs::PoseStamped geometryMsgRobotPose;
+	if (!costmap_ros_->getRobotPose(geometryMsgRobotPose)) {
 		ROS_WARN("[isFrontierReached]: Failed to get RobotPose");
 	}
 	geometry_msgs::PoseStamped robotPoseMsg;

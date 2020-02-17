@@ -5,8 +5,6 @@ project(tf_listener)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
-  gmapping
-  roscpp
   rospy
   tf
 )
@@ -103,7 +101,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES tf_listener
-#  CATKIN_DEPENDS gmapping roscpp rospy tf
+#  CATKIN_DEPENDS rospy tf
 #  DEPENDS system_lib
 )
 
